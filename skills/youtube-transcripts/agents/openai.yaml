@@ -1,0 +1,4 @@
+interface:
+  display_name: "YouTube Transcripts"
+  short_description: "Collect YouTube transcripts safely"
+  default_prompt: "Use $youtube-transcripts to collect transcripts from a YouTube video or channel."

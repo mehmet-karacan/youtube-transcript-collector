@@ -1,0 +1,23 @@
+# Exact resolved graph exercised by the offline 2026-08-18 release-candidate verification.
+# Hash provenance for the Windows CPython 3.14 release job is in
+# requirements/ci-windows-py314.lock.
+attrs==26.1.0
+build==1.5.0
+colorama==0.4.6
+editables==0.6
+hatchling==1.32.0
+iniconfig==2.3.0
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
+packaging==26.3
+pathspec==1.1.1
+pluggy==1.6.0
+pygments==2.21.0
+pyproject-hooks==1.2.0
+pytest==9.1.1
+referencing==0.37.0
+rpds-py==2026.6.3
+ruff==0.16.3
+tomlkit==0.15.1
+trove-classifiers==2026.6.1.19
+yt-dlp==2026.7.4

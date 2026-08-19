@@ -1,0 +1,7 @@
+{
+  "claude-code": ".claude/skills",
+  "codex": ".agents/skills",
+  "gemini-cli": ".gemini/skills",
+  "opencode": ".opencode/skills",
+  "universal": ".agents/skills"
+}

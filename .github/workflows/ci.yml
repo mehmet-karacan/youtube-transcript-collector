@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  PIP_CONSTRAINT: ${{ github.workspace }}/constraints-ci.txt
+  SOURCE_DATE_EPOCH: "1750000000"
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: python -m pip install -c constraints-ci.txt -e ".[dev]"
+      - run: python -m pip check
+      - run: ruff check .
+      - run: pytest
+      - name: Skill quick_validate
+        run: python tools/quick_validate.py skills/youtube-transcripts
+      - name: Portable Agent Skill contract
+        run: |
+          python tools/skill_portability.py validate --skill skills/youtube-transcripts
+          digest=$(python tools/skill_portability.py validate --skill skills/youtube-transcripts | python -c "import json,sys; print(json.load(sys.stdin)['digest'])")
+          python tools/skill_portability.py install --skill skills/youtube-transcripts --workspace /tmp/skill-targets --expected-digest "$digest" --target universal --target codex --target claude-code --target opencode --target gemini-cli
+      - run: python -m build
+      - name: Verify lock, artifact contents, hashes, and deterministic SBOM
+        if: matrix.python-version == '3.11'
+        run: |
+          python tools/release_provenance.py lock-check
+          python tools/release_provenance.py check --wheel dist/*.whl --sdist dist/*.tar.gz --sbom sbom/youtube-transcript-collector.cdx.json
+      - name: Capture resolved dependency evidence
+        run: python -m pip inspect > dist/python-environment.json
+      - name: Installed-wheel outside-repository smoke
+        if: matrix.python-version == '3.11'
+        run: |
+          python -m venv /tmp/ytc-wheel-smoke
+          /tmp/ytc-wheel-smoke/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/ytc-wheel-smoke/bin/yt-transcripts --help | grep collect
+          /tmp/ytc-wheel-smoke/bin/yt-transcripts --json doctor | /tmp/ytc-wheel-smoke/bin/python -c "import json,sys; assert json.load(sys.stdin)['ok']"
+          /tmp/ytc-wheel-smoke/bin/yt-transcripts --json collect preview --video abcdefghijk | /tmp/ytc-wheel-smoke/bin/python -c "import json,sys; d=json.load(sys.stdin); assert d['ok'] and not d['data']['network_used']"
+
+  windows-security-and-portability:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: python -m pip install -c constraints-ci.txt -e ".[dev]"
+      - run: python -m pip check
+      - run: ruff check .
+      - name: Windows junction and reparse confinement regressions
+        run: python -m pytest tests/test_managed_output.py -rs
+      - name: Portable Agent Skill targets
+        shell: pwsh
+        run: |
+          python tools/quick_validate.py skills/youtube-transcripts
+          $digest = python tools/skill_portability.py validate --skill skills/youtube-transcripts | ConvertFrom-Json | Select-Object -ExpandProperty digest
+          python tools/skill_portability.py install --skill skills/youtube-transcripts --workspace "$env:RUNNER_TEMP/skill-targets" --expected-digest $digest --target universal --target codex --target claude-code --target opencode --target gemini-cli
+          python -m pytest tests/test_skill_portability.py
+
+  hash-locked-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Install reviewed hash-locked environment
+        run: python -m pip install --require-hashes -r requirements/ci-windows-py314.lock
+      - run: python tools/release_provenance.py lock-check
+      - name: Verify downloaded wheels against versioned provenance
+        run: |
+          python -m pip download --require-hashes -r requirements/ci-windows-py314.lock --dest release-wheelhouse
+          python tools/release_provenance.py manifest-check --wheelhouse release-wheelhouse
+      - run: python -m pip install --no-build-isolation --no-deps -e .
+      - run: python -m pip check
+      - run: ruff check .
+      - run: pytest
+      - run: python -m build --no-isolation
+      - name: Fail on stale SBOM or artifact mismatch
+        shell: pwsh
+        run: python tools/release_provenance.py check --wheel (Get-Item dist/*.whl) --sdist (Get-Item dist/*.tar.gz) --sbom sbom/youtube-transcript-collector.cdx.json

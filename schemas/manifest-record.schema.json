@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/youtube-transcript-collector/manifest-record.schema.json",
+  "type": "object",
+  "required": ["schema_version", "video_id", "original_title", "safe_title", "webpage_url", "state", "state_reason", "last_checked_at", "attempt_count", "retry_policy_version"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "video_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{11}$"},
+    "channel_id": {"type": ["string", "null"]},
+    "original_title": {"type": "string"},
+    "safe_title": {"type": "string"},
+    "date": {"type": ["string", "null"]},
+    "date_source": {"type": ["string", "null"]},
+    "webpage_url": {"type": "string"},
+    "live_status": {"type": ["string", "null"]},
+    "language": {"type": ["string", "null"]},
+    "transcript_relpath": {"type": ["string", "null"]},
+    "transcript_sha256": {"type": ["string", "null"]},
+    "size_bytes": {"type": ["integer", "null"], "minimum": 0},
+    "state": {"enum": ["discovered", "deferred-live", "caption-unavailable", "text-complete", "quarantined", "legacy-archive-only"]},
+    "state_reason": {"type": "string"},
+    "last_checked_at": {"type": "string"},
+    "next_retry_at": {"type": ["string", "null"]},
+    "attempt_count": {"type": "integer", "minimum": 1},
+    "retry_policy_version": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": false
+}

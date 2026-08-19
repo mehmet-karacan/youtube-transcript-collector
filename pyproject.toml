@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling==1.32.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "youtube-transcript-collector"
+version = "0.1.0"
+description = "Durable, agent-friendly YouTube transcript collection"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{name = "Mehmet Karacan"}]
+dependencies = ["yt-dlp>=2025.1.1,<2027"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
+
+[project.optional-dependencies]
+dev = ["build>=1.2,<2", "jsonschema>=4.23,<5", "pytest>=8,<10", "ruff>=0.9,<1"]
+
+[project.scripts]
+yt-transcripts = "youtube_transcript_collector.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/youtube_transcript_collector"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/sbom"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

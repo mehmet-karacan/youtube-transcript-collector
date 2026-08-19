@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/youtube-transcript-collector/cli-envelope.schema.json",
+  "type": "object",
+  "required": ["ok", "schema_version"],
+  "properties": {
+    "ok": {"type": "boolean"},
+    "schema_version": {"const": 1},
+    "data": {},
+    "error": {
+      "type": "object",
+      "required": ["code", "message", "details"],
+      "properties": {
+        "code": {"type": "string", "pattern": ".*\\S.*"},
+        "message": {"type": "string", "pattern": ".*\\S.*"},
+        "details": {"type": "object"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [
+    {"properties": {"ok": {"const": true}}, "required": ["data"], "not": {"required": ["error"]}},
+    {"properties": {"ok": {"const": false}}, "required": ["error"], "not": {"required": ["data"]}}
+  ],
+  "additionalProperties": false
+}
