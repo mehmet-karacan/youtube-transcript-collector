@@ -17,7 +17,7 @@ pyproject-hooks==1.2.0
 pytest==9.1.1
 referencing==0.37.0
 rpds-py==2026.6.3
-ruff==0.16.3
+ruff==0.16.9
 tomlkit==0.15.1
 trove-classifiers==2026.6.1.19
 yt-dlp==2026.7.4
