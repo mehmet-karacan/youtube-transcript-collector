@@ -2,7 +2,7 @@
 # Hash provenance for the Windows CPython 3.14 release job is in
 # requirements/ci-windows-py314.lock.
 attrs==26.1.0
-build==1.5.0
+build==1.6.1
 colorama==0.4.6
 editables==0.6
 hatchling==1.32.0
